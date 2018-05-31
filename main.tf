@@ -16,45 +16,47 @@ provider "aws" {
 
 # default network gropps
 
-resource "aws_vpc" "vpc-1" {
+resource "aws_vpc" "vpc" {
   cidr_block = "10.10.0.0/16"
   tags {
-    Name = "${var.service_name}-vpc1"
+    Name = "${var.service_name}-vpc"
   }
 }
 
-resource "aws_subnet" "vpc-1-public-subnet" {
+resource "aws_subnet" "public-subnet" {
   count = 2
 
-  vpc_id            = "${aws_vpc.vpc-1.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.vpc-1.cidr_block, 8, 0)}"
-  availability_zone = "us-east-1a"
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)}"
+  availability_zone = "${var.availability_zones[count.index]}"
   tags {
-    Name = "${var.service_name}-vpc-1-public-subnet-1a"
+    Name = "${var.service_name}-public-subnet-${var.availability_zones[count.index]}"
   }
 }
 
-resource "aws_internet_gateway" "vpc-1-igw" {
-  vpc_id = "${aws_vpc.vpc-1.id}"
+resource "aws_internet_gateway" "igw" {
+
+  vpc_id = "${aws_vpc.vpc.id}"
   tags {
-    Name = "${var.service_name}-vpc-1-igw"
+    Name = "${var.service_name}-igw"
   }
 }
 
-resource "aws_route_table" "vpc-1-public-rt" {
-  vpc_id = "${aws_vpc.vpc-1.id}"
+resource "aws_route_table" "public-rt" {
+
+  vpc_id = "${aws_vpc.vpc.id}"
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.vpc-1-igw.id}"
+    gateway_id = "${aws_internet_gateway.igw.id}"
   }
   tags {
-    Name = "${var.service_name}-vpc-1-public-rt"
+    Name = "${var.service_name}-public-rt"
   }
 }
 
 resource "aws_route_table_association" "public-rta-1a" {
-  subnet_id      = "${aws_subnet.vpc-1-public-subnet.id}"
-  route_table_id = "${aws_route_table.vpc-1-public-rt.id}"
+  count          = 2
+  subnet_id      = "${element(aws_subnet.public-subnet.*.id, count.index)}"
+  route_table_id = "${aws_route_table.public-rt.id}"
 }
-
 
