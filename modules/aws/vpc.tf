@@ -12,7 +12,7 @@ resource "aws_subnet" "public-subnet" {
 
   vpc_id            = "${aws_vpc.vpc.id}"
   cidr_block        = "${cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)}"
-   availability_zone = "${var.availability_zones[count.index]}"
+  availability_zone = "${var.availability_zones[count.index]}"
   tags {
     Name = "${var.prefix}-public-subnet-${var.availability_zones[count.index]}"
   }
@@ -42,4 +42,24 @@ resource "aws_route_table_association" "public-rta-1a" {
   count          = 2
   subnet_id      = "${element(aws_subnet.public-subnet.*.id, count.index)}"
   route_table_id = "${aws_route_table.public-rt.id}"
+}
+
+# db subnet
+resource "aws_subnet" "private-db-subnet" {
+  count = 2
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index + 2)}"
+  availability_zone = "${var.availability_zones[count.index]}"
+  tags {
+    Name = "private_db"
+  }
+}
+
+resource "aws_db_subnet_group" "main" {
+  name        = "dbsubnet"
+  description = "It is a DB subnet group on vpc.env=${terraform.env}."
+  subnet_ids  = ["${aws_subnet.private-db-subnet.*.id}"]
+  tags {
+    Name = "dbsubnet"
+  }
 }

@@ -17,4 +17,5 @@ module "aws" {
   source = "./modules/aws"
   prefix = "${terraform.env}-${var.service_name}"
   availability_zones = "${var.availability_zones}"
+  service_name = "${var.service_name}"
 }
