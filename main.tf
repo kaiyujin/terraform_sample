@@ -2,7 +2,6 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "region" {}
 variable "service_name" {}
-variable "env" {}
 variable "availability_zones" {
 type = "list"
 }
@@ -16,6 +15,6 @@ provider "aws" {
 
 module "aws" {
   source = "./modules/aws"
-  prefix = "${var.env}-${var.service_name}"
+  prefix = "${terraform.env}-${var.service_name}"
   availability_zones = "${var.availability_zones}"
 }
